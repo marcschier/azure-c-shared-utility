@@ -56,6 +56,8 @@ IF(WIN32)
     #windows needs to be build 2 flavor of micromock, one for CTEST reporting, one for CPP_UNITTEST
     add_library(micromock_cpp_unittest ${micromock_cpp_files} ${micromock_h_files})
     target_compile_definitions(micromock_cpp_unittest PUBLIC CPP_UNITTEST)
+    target_compile_options(micromock_cpp_unittest PUBLIC /EHsc)
+
     #flip VCInstallDir path
     file(TO_CMAKE_PATH $ENV{VCInstallDir} VCInstallDir)
     target_include_directories(micromock_cpp_unittest PUBLIC ${VCInstallDir}/UnitTest/include)
@@ -66,6 +68,7 @@ IF(WIN32)
     
     add_library(micromock_ctest ${micromock_cpp_files} ${micromock_h_files})
     target_compile_definitions(micromock_ctest PUBLIC USE_CTEST)
+	target_compile_options(micromock_ctest PUBLIC /EHsc)
 else()
     add_library(micromock_ctest ${micromock_cpp_files} ${micromock_h_files})
     target_compile_definitions(micromock_ctest PUBLIC USE_CTEST)
@@ -82,7 +85,7 @@ set(MICROMOCK_INC_FOLDER ${CMAKE_CURRENT_LIST_DIR}/inc CACHE INTERNAL "this is w
 include_directories(${TESTRUNNERSWITCHER_INC_FOLDER} ${CTEST_INC_FOLDER} ${SAL_INC_FOLDER} ${MICROMOCK_INC_FOLDER} )
 include_directories(${TESTRUNNERSWITCHER_INCLUDES} ${CTEST_INCLUDES} ${UMOCK_C_INCLUDES})
 
-if (NOT ${skip_unittests})
+if (${run_unittests})
      add_subdirectory(unittests)
 endif()
 
@@ -95,6 +98,8 @@ endif()
 
 if(WIN32)
     add_executable(micromock_generator ./tools/micromockgenerator/micromockgenerator.cpp)
+
+    target_compile_options(micromock_generator PUBLIC /EHsc)
 
     set_target_properties(micromock_generator
                PROPERTIES

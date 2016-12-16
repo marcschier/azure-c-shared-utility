@@ -30,7 +30,7 @@ if (WINCE)
 ENDIF()
 
 #the following variables are project-wide and can be used with cmake-gui
-option(skip_unittests "set skip_unittests to ON to skip unittests (default is OFF)[if possible, they are always built]" OFF)
+option(run_unittests "set run_unittests to ON to run unittests (default is OFF)" OFF)
 option(skip_samples "set skip_samples to ON to skip building samples (default is OFF)[if possible, they are always built]" OFF)
 option(use_http "set use_http to ON if http is to be used, set to OFF to not use http" ON)
 option(use_condition "set use_condition to ON if the condition module and its adapters should be enabled" ON)
@@ -38,6 +38,8 @@ option(use_wsio "set use_wsio to ON to use libwebsockets for WebSocket support (
 option(nuget_e2e_tests "set nuget_e2e_tests to ON to generate e2e tests to run with nuget packages (default is OFF)" OFF)
 option(use_installed_dependencies "set use_installed_dependencies to ON to use installed packages instead of building dependencies from submodules" OFF)
 option(use_default_uuid "set use_default_uuid to ON to use the out of the box UUID that comes with the SDK rather than platform specific implementations" OFF)
+option(run_e2e_tests "set run_e2e_tests to ON to run e2e tests (default is OFF). Chsare dutility does not have any e2e tests, but the option needs to exist to evaluate in IF statements" OFF)
+option(use_builtin_httpapi "set use_builtin_httpapi to ON to use the built-in httpapi_compact that comes with C shared utility (default is OFF)" OFF)
 
 if(WIN32)
     option(use_schannel "set use_schannel to ON if schannel is to be used, set to OFF to not use schannel" ON)
@@ -53,6 +55,7 @@ option(use_cyclonessl "set use_cyclonessl to ON if cyclonessl is to be used, set
 
 option(compileOption_C "passes a string to the command line of the C compiler" OFF)
 option(compileOption_CXX "passes a string to the command line of the C++ compiler" OFF)
+option(build_as_dynamic "build the C Shared libaries as shared"  OFF)
 
 if(${use_cyclonessl} AND WIN32)
     set(cyclonessl_c_files
@@ -129,7 +132,12 @@ if(MSVC)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
         # WEC 2013 uses older VS compiler. Build some files as C++ files to resolve C99 related compile issues
-        SET_SOURCE_FILES_PROPERTIES(src/consolelogger.c src/xlogging.c src/map.c adapters/uniqueid_win32.c adapters/httpapi_wince.c src/tlsio_schannel.c src/x509_schannel.c PROPERTIES LANGUAGE CXX)
+        SET_SOURCE_FILES_PROPERTIES(src/consolelogger.c src/xlogging.c src/map.c adapters/uniqueid_win32.c src/tlsio_schannel.c src/x509_schannel.c PROPERTIES LANGUAGE CXX)
+        if (${use_httpapi_compact})
+            SET_SOURCE_FILES_PROPERTIES(adapters/httpapi_compact.c PROPERTIES LANGUAGE CXX)
+        else()
+            SET_SOURCE_FILES_PROPERTIES(adapters/httpapi_wince.c PROPERTIES LANGUAGE CXX)
+        endif()
         add_definitions(-DWIN32) #WEC 2013
     ELSE()
 
@@ -291,6 +299,7 @@ compileAsC99()
 set(source_c_files
 ./src/base64.c
 ./src/buffer.c
+./src/connection_string_parser.c
 ./src/constbuffer.c
 ./src/consolelogger.c
 ./src/crt_abstractions.c
@@ -363,6 +372,7 @@ set(source_h_files
 ./inc/azure_c_shared_utility/agenttime.h
 ./inc/azure_c_shared_utility/base64.h
 ./inc/azure_c_shared_utility/buffer_.h
+./inc/azure_c_shared_utility/connection_string_parser.h
 ./inc/azure_c_shared_utility/crt_abstractions.h
 ./inc/azure_c_shared_utility/constmap.h
 ./inc/azure_c_shared_utility/condition.h
@@ -464,7 +474,11 @@ ELSE()
 ENDIF(WIN32)
 
 #this is the product (a library)
-add_library(aziotsharedutil ${source_c_files} ${source_h_files})
+if(${build_as_dynamic})
+    add_library(aziotsharedutil SHARED ./src/aziotsharedutil.def ${source_c_files} ${source_h_files})
+else()
+    add_library(aziotsharedutil ${source_c_files} ${source_h_files})
+endif()
 
 if(${use_http})
     if(WIN32)
@@ -491,7 +505,7 @@ endif()
 if(${use_openssl})
     if (WIN32)
         target_link_libraries(aziotsharedutil
-			$ENV{OpenSSLDir}/lib/ssleay32.lib 
+            $ENV{OpenSSLDir}/lib/ssleay32.lib 
             $ENV{OpenSSLDir}/lib/libeay32.lib
             crypt32 ws2_32 secur32)
     else()
@@ -508,19 +522,19 @@ if(${use_cyclonessl} AND WIN32)
 endif()
 
 if(WIN32)
-	if (NOT ${use_default_uuid})
-		target_link_libraries(aziotsharedutil rpcrt4.lib)
-	endif()
+    if (NOT ${use_default_uuid})
+        target_link_libraries(aziotsharedutil rpcrt4.lib)
+    endif()
 endif()
 
 if(LINUX)
     target_link_libraries(aziotsharedutil pthread m)
-	if (NOT ${use_default_uuid})
-		target_link_libraries(aziotsharedutil uuid)
-	endif()
+    if (NOT ${use_default_uuid})
+        target_link_libraries(aziotsharedutil uuid)
+    endif()
 endif()
 
-if (NOT ${skip_unittests})
+if (${run_unittests})
     include("dependencies-test.cmake")
     add_subdirectory(testtools)
     add_subdirectory(tests)
