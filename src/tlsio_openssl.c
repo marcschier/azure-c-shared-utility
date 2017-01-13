@@ -931,7 +931,7 @@ void tlsio_openssl_deinit(void)
 {
     openssl_dynamic_locks_uninstall();
     openssl_static_locks_uninstall();
-#if (OPENSSL_VERSION_NUMBER >= 0x00907000L) 
+#if (OPENSSL_VERSION_NUMBER >= 0x00907000L) && (OPENSSL_VERSION_NUMBER < 0x20000000L)
     FIPS_mode_set(0);
 #endif
     CRYPTO_set_locking_callback(NULL);
