@@ -872,26 +872,6 @@ static int create_openssl_instance(TLS_IO_INSTANCE* tlsInstance)
                         (void)BIO_free(tlsInstance->out_bio);
                         SSL_CTX_free(tlsInstance->ssl_context);
                         tlsInstance->ssl_context = NULL;
-                        result = __LINE__;
-                    }
-                    else
-                    {
-                        SSL_CTX_set_verify(tlsInstance->ssl_context, SSL_VERIFY_PEER, NULL);
-
-                        // Specifies that the default locations for which CA certificates are loaded should be used.
-                        if (SSL_CTX_set_default_verify_paths(tlsInstance->ssl_context) != 1)
-                        {
-                            // This is only a warning to the user. They can still specify the certificate via SetOption.
-                            LogInfo("WARNING: Unable to specify the default location for CA certificates on this platform.");
-                        }
-
-                        tlsInstance->ssl = SSL_new(tlsInstance->ssl_context);
-                        if (tlsInstance->ssl == NULL)
-                        {
-                            (void)BIO_free(tlsInstance->in_bio);
-                            (void)BIO_free(tlsInstance->out_bio);
-                            SSL_CTX_free(tlsInstance->ssl_context);
-                            tlsInstance->ssl_context = NULL;
                             log_ERR_get_error("Failed creating OpenSSL instance.");
                             result = __LINE__;
                         }
