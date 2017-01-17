@@ -872,15 +872,14 @@ static int create_openssl_instance(TLS_IO_INSTANCE* tlsInstance)
                         (void)BIO_free(tlsInstance->out_bio);
                         SSL_CTX_free(tlsInstance->ssl_context);
                         tlsInstance->ssl_context = NULL;
-                            log_ERR_get_error("Failed creating OpenSSL instance.");
-                            result = __LINE__;
-                        }
-                        else
-                        {
-                            SSL_set_bio(tlsInstance->ssl, tlsInstance->in_bio, tlsInstance->out_bio);
-                            SSL_set_connect_state(tlsInstance->ssl);
-                            result = 0;
-                        }
+                        log_ERR_get_error("Failed creating OpenSSL instance.");
+                        result = __LINE__;
+                    }
+                    else
+                    {
+                        SSL_set_bio(tlsInstance->ssl, tlsInstance->in_bio, tlsInstance->out_bio);
+                        SSL_set_connect_state(tlsInstance->ssl);
+                        result = 0;
                     }
                 }
             }
