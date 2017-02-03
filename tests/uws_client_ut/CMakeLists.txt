@@ -1,19 +1,18 @@
 #Copyright (c) Microsoft. All rights reserved.
 #Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#this is CMakeLists.txt for urlencode_ut
 cmake_minimum_required(VERSION 2.8.11)
 
-compileAsC11()
-set(theseTestsName urlencode_ut)
+compileAsC99()
+set(theseTestsName uws_client_ut)
 
 set(${theseTestsName}_test_files
 ${theseTestsName}.c
 )
 
 set(${theseTestsName}_c_files
-../../src/urlencode.c
-../../src/strings.c
+../../src/uws_client.c
+real_buffer.c
 )
 
 set(${theseTestsName}_h_files
